@@ -1,0 +1,23 @@
+name: HDL regression
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  simulate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install simulator
+        run: sudo apt-get update && sudo apt-get install -y iverilog
+      - name: Run HDL tests
+        run: sh scripts/run_regression.sh
+      - name: Preserve logs and combined waveform
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-results
+          path: |
+            build/*.log
+            build/*.vcd
+          if-no-files-found: ignore
