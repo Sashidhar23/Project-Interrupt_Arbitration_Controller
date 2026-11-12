@@ -15,7 +15,7 @@ models and benches. Keep device models out of synthesis sources.
 | rtl/metrics/ | Planned | metrics.sv and traffic_gen.sv for board counters and controlled stress traffic |
 | rtl/axi/ and sw/ | Planned for onboard USB-UART | axi_regs.sv; main.c, pl_regs.h and pl_irq.c/.h for the PS UART1 bridge |
 | rtl/ (top levels) | sensor_hub.sv, hygro_test_top.sv, ACL2/acl_top.sv | Add zedboard_top.sv after validating connector assignments |
-| constraints/ | Planned | zedboard_pmods.xdc with verified package pins, I/O standards and clocks |
+| constraints/ | hygro_jb.xdc | Standalone HYGRO on JB; final combined-board XDC remains to be integrated |
 | sim/arbiter/ | arb_system.v, synth_requester.v, tb_arbiter.v | Preserve the synthetic arbitration regression |
 | sim/ and sim/models/ | tb_spi_master.v, tb_acl2_service.sv, adxl362_model.sv | Added: hdc1080_model.sv, tb_hygro_service.sv and tb_sensor_hub.sv. Remaining: tb_system_stress.sv |
 | scripts/ | run_xsim.tcl, run_iverilog.sh, run_regression.sh | Later add full-project build and measurement scripts |
@@ -35,3 +35,5 @@ models and benches. Keep device models out of synthesis sources.
 For the original arbiter regression, compile rtl/control/arbiter.v plus all
 three files in sim/arbiter/ and select tb_arbiter as top. For SPI loopback,
 compile rtl/bus/spi_master.v and sim/tb_spi_master.v with tb_spi_master as top.
+
+Standalone HYGRO setup is in scripts/create_hygro_project.tcl, scripts/run_hygro_xsim.tcl and scripts/run_hygro_iverilog.sh. See docs/HYGRO_STANDALONE.md and docs/SYSTEM_DATA_FLOW.md. The scripts select canonical RTL files explicitly to avoid duplicate module definitions in rtl/ACL2/.

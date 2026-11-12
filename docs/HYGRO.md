@@ -62,7 +62,7 @@ an externally supplied synchronous reset and is not a complete board top.
 
 Do not reuse invented package pins. Add an XDC only after matching the exact
 ZedBoard connector, clock, switches, LEDs and PMOD wiring to the board's master
-constraints. The current repository does not supply verified HYGRO constraints.
+constraints. The repository now supplies constraints/hygro_jb.xdc, cross-checked against the Digilent pin map, for standalone HYGRO on JB. Match its VADJ_IOSTANDARD variable to the actual board setting; physical hardware validation remains pending.
 
 HYGRO top switch modes: 0 status, 1/2 manufacturer ID high/low, 3 device ID
 high, 4/5 temperature high/low, 6/7 humidity high/low. Status LEDs [7:5]
@@ -84,3 +84,5 @@ UART/PS bridge, hardware metrics, or the final stress measurement report.
 Simulation success does not establish synthesis timing or electrical validity.
 
 Reference: TI HDC1080 datasheet, https://www.ti.com/lit/ds/symlink/hdc1080.pdf
+
+See [standalone setup](HYGRO_STANDALONE.md) for executable scripts, JB wiring and expected outputs, and [system data flow](SYSTEM_DATA_FLOW.md) for the shared output architecture.
