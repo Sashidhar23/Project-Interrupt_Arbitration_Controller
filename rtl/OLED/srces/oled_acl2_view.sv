@@ -66,6 +66,8 @@ module oled_acl2_view #(
     input  wire               id_ok,
     input  wire               initialized,   // unused here (kept for interface)
     input  wire               fault,         // unused here (kept for interface)
+    input  wire        [7:0]  com_pins,      // 0xDA argument: try 20, 02, 12, 00
+    input  wire               flip_sw,       // XOR with FLIP: rotate 180 deg
     output wire               oled_cs_n,
     output wire               oled_dc,
     output logic              oled_res_n,
@@ -91,9 +93,9 @@ module oled_acl2_view #(
             5'd1:  init_byte = 8'h8D;  5'd2: init_byte = 8'h14;   // charge pump on
             5'd3:  init_byte = 8'hD9;  5'd4: init_byte = 8'hF1;   // pre-charge
             5'd5:  init_byte = 8'h81;  5'd6: init_byte = CONTRAST;   // contrast
-            5'd7:  init_byte = FLIP ? 8'hA0 : 8'hA1;        // segment remap
-            5'd8:  init_byte = FLIP ? 8'hC0 : 8'hC8;        // COM scan direction
-            5'd9:  init_byte = 8'hDA;  5'd10: init_byte = 8'h00;  // COM pins
+            5'd7:  init_byte = (FLIP ^ flip_sw) ? 8'hA0 : 8'hA1;        // segment remap
+            5'd8:  init_byte = (FLIP ^ flip_sw) ? 8'hC0 : 8'hC8;        // COM scan direction
+            5'd9:  init_byte = 8'hDA;  5'd10: init_byte = com_pins;  // COM pins
             5'd11: init_byte = 8'hA4;                       // show RAM contents (cancel all-on)
             5'd12: init_byte = 8'hA6;                       // normal (non-inverted) display
             5'd13: init_byte = 8'h20;  5'd14: init_byte = 8'h02;  // page addressing mode

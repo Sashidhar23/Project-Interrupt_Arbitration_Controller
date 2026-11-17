@@ -4,6 +4,7 @@
 //  LD4 CS active (stretched) | LD5 SCLK activity (stretched) | LD6 SDIN activity | LD7 D/C=data seen
 module oled_dbg_top (
     input  wire clk, btn_rst,
+    input  wire [2:0] sw,     // sw[1:0] COM pins (00=20 01=02 10=12 11=00), sw[2] flip. Press BTNC after changing.
     output wire oled_cs_n, oled_sdin, oled_sclk, oled_dc,
     output wire oled_res_n, oled_vbatc_n, oled_vddc_n,
     output wire [7:0] led
@@ -14,12 +15,16 @@ module oled_dbg_top (
     wire rst;
     reset_sync #(.STAGES(2)) u_rst (.clk(clk), .arst(por_busy | btn_rst), .rst(rst));
 
+    logic [7:0] com_sel;
+    always_comb case (sw[1:0]) 2'd0: com_sel = 8'h20; 2'd1: com_sel = 8'h02; 2'd2: com_sel = 8'h12; default: com_sel = 8'h00; endcase
+
     wire ready;
     oled_acl2_view #(.CLK_DIV(25), .T_1MS(100_000), .T_100MS(10_000_000),
                      .REFRESH_CYCLES(10_000_000), .FLIP(1'b0), .ALL_ON(1'b0)) u_oled (
         .clk(clk), .rst(rst),
         .x(-16'sd1075), .y(-16'sd275), .z(16'sd1000), .device_id(8'hAD),
         .id_ok(1'b1), .initialized(1'b1), .fault(1'b0),
+        .com_pins(com_sel), .flip_sw(sw[2]),
         .oled_cs_n(oled_cs_n), .oled_dc(oled_dc), .oled_res_n(oled_res_n),
         .oled_vbatc_n(oled_vbatc_n), .oled_vddc_n(oled_vddc_n),
         .oled_sclk(oled_sclk), .oled_sdin(oled_sdin), .ready(ready));
