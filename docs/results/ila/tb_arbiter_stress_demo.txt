@@ -1,0 +1,6 @@
+VCD info: dumpfile build/arbiter_stress_demo.vcd opened for output.
+PASS benchmark aging=0 grants0=241 grants1=0 maxwait0=1 maxwait1=8192
+PASS benchmark aging=1 grants0=181 grants1=60 maxwait0=35 maxwait1=103
+PASS benchmark aging=0 grants0=241 grants1=0 maxwait0=1 maxwait1=8192
+PASS stress demo: repeatable reset, priority first, aging service, no preemption, independent metric scoreboard
+sim/tb_arbiter_stress_demo.sv:54: $finish called at 246020000 (1ps)

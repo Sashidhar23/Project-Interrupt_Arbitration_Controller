@@ -1,0 +1,2 @@
+PASS debug wrapper: live/test mux, VIO controls, OFF/ON summaries, live isolation
+sim/tb_arbiter_debug.sv:39: $finish called at 164090000 (1ps)

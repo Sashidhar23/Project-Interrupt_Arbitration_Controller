@@ -1,0 +1,7 @@
+PASS HYGRO identities, config, retry without retrigger, periodic samples
+PASS HYGRO absent device
+PASS HYGRO wrong identity
+PASS HYGRO bounded not-ready retries
+PASS HYGRO stuck SCL releases requester
+PASS HYGRO reset during transaction and recovery
+sim/tb_hygro_service.sv:71: $finish called at 281615000 (1ps)

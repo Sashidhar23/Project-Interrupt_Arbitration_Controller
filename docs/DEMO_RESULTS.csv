@@ -1,0 +1,6 @@
+source,aging,grant_count_ch0,grant_count_ch1,max_wait_cycles_ch0,max_wait_cycles_ch1,evidence
+simulation,OFF,241,0,1,8192,tb_arbiter_stress_demo
+simulation,ON,181,60,35,103,tb_arbiter_stress_demo
+hardware_synthetic,OFF,,,,,
+hardware_synthetic,ON,,,,,
+hardware_real,ON,,,,,

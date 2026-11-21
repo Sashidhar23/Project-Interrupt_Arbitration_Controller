@@ -2,6 +2,7 @@
 // ZedBoard ACL2 requester. rst is synchronous active high, in the clk domain.
 // req spans a WHOLE transaction, including its one-cycle done indication.
 module adxl362_ctrl #(
+    parameter [7:0] FILTER_CTL = 8'h13,
     parameter integer CLK_DIV = 50,                 // 100 MHz -> 1 MHz SPI
     parameter integer POWERUP_CYCLES = 10000000,    // 100 ms @ 100 MHz
     parameter integer BYTE_TIMEOUT_CYCLES = 32*CLK_DIV + 32
@@ -46,7 +47,7 @@ module adxl362_ctrl #(
     always @* begin
         case (job)
             ID:      begin address=8'h00; value=0; end
-            FILTER:  begin address=8'h2C; value=8'h13; end // +/-2 g, half BW, 100 Hz
+            FILTER:  begin address=8'h2C; value=FILTER_CTL; end // 13=2g, 93=8g; half BW, 100 Hz
             MAP_IRQ: begin address=8'h2A; value=8'h01; end // active-high DATA_READY -> INT1
             MEASURE: begin address=8'h2D; value=8'h02; end // measurement mode
             default: begin address=8'h0E; value=0; end     // XDATA_L

@@ -17,7 +17,7 @@ module oled_test_top (
     oled_acl2_view #(.CLK_DIV(25), .T_1MS(100_000), .T_100MS(10_000_000),
                      .REFRESH_CYCLES(10_000_000), .FLIP(1'b0), .ALL_ON(1'b0)) u_oled (
         .clk(clk), .rst(rst),
-        .x(-16'sd1075), .y(-16'sd275), .z(16'sd1000), .device_id(8'hAD),
+        .frame_text(672'd0), .x(-16'sd1075), .y(-16'sd275), .z(16'sd1000), .device_id(8'hAD),
         .id_ok(1'b1), .initialized(1'b1), .fault(1'b0), .com_pins(8'h20), .flip_sw(1'b0),
         .oled_cs_n(oled_cs_n), .oled_dc(oled_dc), .oled_res_n(oled_res_n),
         .oled_vbatc_n(oled_vbatc_n), .oled_vddc_n(oled_vddc_n),

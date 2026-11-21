@@ -1,0 +1,8 @@
+VCD info: dumpfile tb_spi_master.vcd opened for output.
+PASS: sent a5 got a5
+PASS: sent 5a got 5a
+PASS: sent ff got ff
+PASS: sent 00 got 00
+PASS: sent 0b got 0b
+ALL TESTS PASSED
+sim/tb_spi_master.v:60: $finish called at 4375000 (1ps)

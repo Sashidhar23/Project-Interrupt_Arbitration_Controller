@@ -1,0 +1,6 @@
+VCD info: dumpfile arbitration_demo.vcd opened for output.
+MODE  GRANTS0 GRANTS1 MAX_WAIT0 MAX_WAIT1 (cycles)
+OFF   241 0 1 8192
+ON    181 60 35 103
+PASS: simultaneous contention, priority first, exclusive grants, no preemption, aging growth, OFF unserved wait, ON service and bounded observed wait
+sim/tb_arbitration_demo.sv:81: $finish called at 82140000 (1ps)

@@ -4,3 +4,11 @@ build/
 *.log
 *.vcd
 *.wdb
+
+# Vivado runtime metadata
+dfx_runtime.txt
+clockInfo.txt
+
+# Standalone presentation-test outputs
+/arbitration_events.csv
+/arbitration_results.csv

@@ -5,7 +5,8 @@
 sensor_hub.sv connects the real ACL2 and HYGRO service modules to one priority
 arbiter with aging. Channel 0 is ACL2; channel 1 is HYGRO. The hub exposes
 raw values and one-clock valid strobes. It does not yet contain output queues,
-UART, OLED, an AXI bridge, or final board wiring.
+UART or an AXI bridge. The separate sensor_oled_top now wraps the hub with live
+OLED output and combined JA/JB/JC wiring; see [OLED integration](OLED_INTEGRATION.md).
 
 The sensors do not send data to each other. ACL2 provides signed X/Y/Z
 acceleration over SPI and requests service after a data-ready interrupt.

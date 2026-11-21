@@ -1,0 +1,2 @@
+PASS OLED text: valid capture, independent updates, signs, limits, WAIT, ERR and reset
+sim/tb_sensor_oled_text.sv:41: $finish called at 2511000 (1ps)

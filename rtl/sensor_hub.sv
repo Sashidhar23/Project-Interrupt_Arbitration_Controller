@@ -1,6 +1,7 @@
 `timescale 1ns/1ps
 // Portable acquisition integration. rst is synchronous active high.
 module sensor_hub #(
+    parameter [7:0] ACL_FILTER_CTL=8'h13,
     parameter integer ACL_SPI_DIV=50,
     parameter integer ACL_STARTUP_CYCLES=10000000,
     parameter integer I2C_HALF_PERIOD=500,
@@ -21,12 +22,13 @@ module sensor_hub #(
     output wire signed [15:0] x,y,z,
     output wire [15:0] temperature_raw, humidity_raw,
     output wire [2:0] hygro_error,
+    output wire [8:0] debug_eff0, debug_eff1,
     output wire [31:0] hygro_retries
 );
     arbiter arb(.clk(clk),.rst(rst),.req(req),.grant(grant),.done(done),
         .aging_en(aging_en),.age_thresh(age_thresh),.base_prio0(acl_priority),
-        .base_prio1(hygro_priority),.eff_prio0(),.eff_prio1());
-    adxl362_ctrl #(.CLK_DIV(ACL_SPI_DIV),.POWERUP_CYCLES(ACL_STARTUP_CYCLES)) acl(
+        .base_prio1(hygro_priority),.eff_prio0(debug_eff0),.eff_prio1(debug_eff1));
+    adxl362_ctrl #(.FILTER_CTL(ACL_FILTER_CTL),.CLK_DIV(ACL_SPI_DIV),.POWERUP_CYCLES(ACL_STARTUP_CYCLES)) acl(
         .clk(clk),.rst(rst),.req(req[0]),.grant(grant[0]),.done(done[0]),
         .int1_async(acl_int1),.cs_n(acl_cs_n),.sclk(acl_sclk),.mosi(acl_mosi),
         .miso(acl_miso),.id_ok(),.initialized(initialized[0]),.fault(fault[0]),

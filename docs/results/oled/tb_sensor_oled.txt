@@ -1,0 +1,2 @@
+PASS OLED integration: sensor pin models, 512-byte clear, two exact SPI frames, coherent mid-frame update, concurrent HYGRO
+sim/tb_sensor_oled.sv:110: $finish called at 594340000 (1ps)

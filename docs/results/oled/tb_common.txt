@@ -1,0 +1,6 @@
+PASS reset, synchronizer and record layout
+PASS FIFO DEPTH=1
+PASS FIFO DEPTH=3
+PASS FIFO DEPTH=16
+ALL COMMON TESTS PASSED
+sim/tb_common.sv:123: $finish called at 20546000 (1ps)

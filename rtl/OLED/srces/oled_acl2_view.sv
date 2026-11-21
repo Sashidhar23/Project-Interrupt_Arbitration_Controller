@@ -3,8 +3,9 @@
 // oled_acl2_view : PMOD OLED (SSD1306, 128x32, 4 pages) text view of ACL2 data.
 //   line0  ACL2 ID=hh OK        (BAD if !id_ok)
 //   line1  X=+1075   line2  Y=-0275   line3  Z=+1000
-// Power-up order (Digilent PmodOLED): VDD on, 1 ms, DISPLAY OFF, RES pulse,
-// charge pump + precharge, VBAT on, 100 ms, contrast/remap/COM, DISPLAY ON.
+// EXTERNAL_TEXT=1 renders a frame snapshot of four 21-character ASCII rows.
+// Power-up: VDD on, DISPLAY OFF, RES pulse, configuration, RAM clear,
+// VBAT on, 100 ms delay, DISPLAY ON.
 // SPI mode 0, MSB first, CS framed per byte, D/C valid for the whole byte.
 // =============================================================================
 module oled_spi_tx #(parameter int unsigned CLK_DIV = 25) (   // half SCLK period in clks
@@ -56,11 +57,13 @@ module oled_acl2_view #(
     parameter int unsigned T_1MS          = 100_000,
     parameter int unsigned T_100MS        = 10_000_000,
     parameter int unsigned REFRESH_CYCLES = 10_000_000,  // 10 updates/s
+    parameter bit          EXTERNAL_TEXT  = 1'b0,        // 4 rows x 21 ASCII characters, MSB first
     parameter bit          FLIP           = 1'b0,        // rotate 180 deg if upside down
     parameter bit          ALL_ON         = 1'b0,        // 1 = send 0xA5 (all pixels on) as a wiring test
     parameter logic [7:0]  CONTRAST       = 8'hCF        // 0x00..0xFF panel brightness
 ) (
     input  wire               clk, rst,
+    input  wire [671:0]        frame_text,
     input  wire signed [15:0] x, y, z,
     input  wire        [7:0]  device_id,
     input  wire               id_ok,
@@ -107,6 +110,7 @@ module oled_acl2_view #(
     // ---------------- 5x7 font (column bytes, LSB = top row) ----------------
     function automatic logic [39:0] font5(input logic [7:0] ch);
         case (ch)
+            "G": font5 = 40'h3E41495132;
             "0": font5 = 40'h3E5149453E;  "1": font5 = 40'h00427F4000;  "2": font5 = 40'h4261514946;
             "3": font5 = 40'h2141454B31;  "4": font5 = 40'h1814127F10;  "5": font5 = 40'h2745454539;
             "6": font5 = 40'h3C4A494930;  "7": font5 = 40'h0171090503;  "8": font5 = 40'h3649494936;
@@ -116,12 +120,17 @@ module oled_acl2_view #(
             "I": font5 = 40'h00417F4100;  "K": font5 = 40'h7F08142241;  "L": font5 = 40'h7F40404040;
             "O": font5 = 40'h3E4141413E;  "X": font5 = 40'h6314081463;  "Y": font5 = 40'h0708700807;
             "Z": font5 = 40'h6151494543;
+            "H": font5 = 40'h7F0808087F; "R": font5 = 40'h7F09192946;
+            "T": font5 = 40'h01017F0101; "W": font5 = 40'h7F2018207F;
+            ":": font5 = 40'h0036360000; ".": font5 = 40'h0060600000;
+            "%": font5 = 40'h2313086462;
             "+": font5 = 40'h08083E0808;  "-": font5 = 40'h0808080808;  "=": font5 = 40'h1414141414;
             default: font5 = 40'h0;
         endcase
     endfunction
 
     // ---------------- latched frame data + BCD ----------------
+    logic [671:0] text_l;
     logic [7:0]  id_l;
     logic        ok_l, negx, negy, negz;
     logic [11:0] magx, magy, magz;
@@ -141,7 +150,9 @@ module oled_acl2_view #(
         logic [15:0] b;
         logic        neg;
         c = 8'h20;
-        if (ln == 2'd0) begin
+        if (EXTERNAL_TEXT) begin
+            if (ci < 21) c = text_l[671 - (ln*21 + ci)*8 -: 8];
+        end else if (ln == 2'd0) begin
             case (ci)
                 5'd0: c = "A";  5'd1: c = "C";  5'd2: c = "L";  5'd3: c = "2";
                 5'd5: c = "I";  5'd6: c = "D";  5'd7: c = "=";
@@ -170,8 +181,9 @@ module oled_acl2_view #(
 
     // ---------------- main FSM ----------------
     typedef enum logic [4:0] {S_BOOT, S_TMR, S_C0, S_RES, S_RES2, S_C1, S_VB, S_C2,
-                              S_SEND, S_SENDW, S_LATCH, S_CONV, S_PG0, S_PB, S_PBW} st_t;
+                              S_SEND, S_SENDW, S_LATCH, S_CONV, S_PG0, S_PB, S_PBW, S_ON} st_t;
     st_t         st, nxt;
+    logic clearing;
     logic [31:0] tmr;
     logic [4:0]  idx, last;
     logic [1:0]  ph;
@@ -190,7 +202,7 @@ module oled_acl2_view #(
                 2'd1: pbyte = 8'h00;
                 default: pbyte = 8'h10;
             endcase
-        end else if (si == 3'd5 || ci > 5'd20) pbyte = 8'h00;
+        end else if (clearing || si == 3'd5 || ci > 5'd20) pbyte = 8'h00;
         else pbyte = g[39 - 8*si -: 8];
     end
 
@@ -199,7 +211,7 @@ module oled_acl2_view #(
         bcd_start <= 1'b0;
         if (rst) begin
             st <= S_BOOT; oled_res_n <= 1'b1; oled_vbatc_n <= 1'b1; oled_vddc_n <= 1'b1;
-            ready <= 1'b0; tmr <= '0; tx_dc <= 1'b0; tx_byte <= '0;
+            ready <= 1'b0; clearing <= 1'b0; text_l <= {84{8'h20}}; tmr <= '0; tx_dc <= 1'b0; tx_byte <= '0;
         end else case (st)
             S_BOOT:  begin oled_vddc_n <= 1'b0; tmr <= T_1MS; nxt <= S_C0; st <= S_TMR; end
             S_TMR:   if (tmr == 0) st <= nxt; else tmr <= tmr - 1'b1;
@@ -208,21 +220,25 @@ module oled_acl2_view #(
             S_RES:   begin oled_res_n <= 1'b0; tmr <= T_1MS; nxt <= S_RES2; st <= S_TMR; end
             S_RES2:  begin oled_res_n <= 1'b1; tmr <= T_1MS; nxt <= S_C1;  st <= S_TMR; end
             S_C1:    begin idx <= 5'd1; last <= 5'd4;  ph <= 2'd1; st <= S_SEND; end   // charge pump, precharge
-            S_VB:    begin oled_vbatc_n <= 1'b0; tmr <= T_100MS; nxt <= S_C2; st <= S_TMR; end
-            S_C2:    begin idx <= 5'd5; last <= ALL_ON ? 5'd16 : 5'd15; ph <= 2'd2; st <= S_SEND; end   // contrast..DISPLAY ON
+            S_VB:    begin oled_vbatc_n <= 1'b0; tmr <= T_100MS; nxt <= S_ON; st <= S_TMR; end
+            S_C2:    begin idx <= 5'd5; last <= 5'd14; ph <= 2'd2; st <= S_SEND; end   // contrast..page addressing
 
             S_SEND:  begin tx_byte <= init_byte(idx); tx_dc <= 1'b0; tx_start <= 1'b1; st <= S_SENDW; end
             S_SENDW: if (tx_done) begin
                 if (idx == last) begin
                     case (ph)
                         2'd0:    st <= S_RES;
-                        2'd1:    st <= S_VB;
+                        2'd1:    st <= S_C2;
+                        2'd2:    begin clearing <= 1'b1; st <= S_PG0; end
                         default: begin ready <= 1'b1; st <= S_LATCH; end
                     endcase
                 end else begin idx <= idx + 1'b1; st <= S_SEND; end
             end
 
+            S_ON: begin idx <= 5'd15; last <= ALL_ON ? 5'd16 : 5'd15; ph <= 2'd3; st <= S_SEND; end
+
             S_LATCH: begin
+                text_l <= frame_text;
                 id_l <= device_id; ok_l <= id_ok;
                 negx <= x[15]; negy <= y[15]; negz <= z[15];
                 magx <= x[15] ? 12'(-x) : x[11:0];
@@ -236,7 +252,10 @@ module oled_acl2_view #(
             S_PB:    begin tx_byte <= pbyte; tx_dc <= (bi >= 8'd3); tx_start <= 1'b1; st <= S_PBW; end
             S_PBW:   if (tx_done) begin
                 if (bi == 8'd130) begin
-                    if (page == 2'd3) begin tmr <= REFRESH_CYCLES; nxt <= S_LATCH; st <= S_TMR; end
+                    if (page == 2'd3) begin
+                        if (clearing) begin clearing <= 1'b0; st <= S_VB; end
+                        else begin tmr <= REFRESH_CYCLES; nxt <= S_LATCH; st <= S_TMR; end
+                    end
                     else begin page <= page + 1'b1; bi <= 8'd0; ci <= 5'd0; si <= 3'd0; st <= S_PB; end
                 end else begin
                     bi <= bi + 1'b1;

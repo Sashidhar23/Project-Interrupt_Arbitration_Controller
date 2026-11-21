@@ -1,0 +1,3 @@
+VCD info: dumpfile build/sensor_hub.vcd opened for output.
+PASS sensor hub: two ACL2 reads completed during HYGRO conversion, two HYGRO samples
+sim/tb_sensor_hub.sv:55: $finish called at 158230000 (1ps)

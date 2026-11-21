@@ -1,0 +1,91 @@
+VCD info: dumpfile tb_arbiter.vcd opened for output.
+
+=== S1: higher priority (ch0=7 > ch1=1) wins a simultaneous request ===
+  PASS: ch0 served before ch1
+  PASS: both eventually served exactly once
+  PASS: S1: never both grants at once
+  PASS: S1: no grant without a request
+  PASS: S1: no preemption (grant held until done)
+  PASS: S1: no interrupt event lost
+
+=== S2: swapped priorities (ch0=1 < ch1=7) ===
+  PASS: ch1 served before ch0
+  PASS: S2: never both grants at once
+  PASS: S2: no grant without a request
+  PASS: S2: no preemption (grant held until done)
+  PASS: S2: no interrupt event lost
+
+=== S3: equal priority tie -> least-recently-served (ch0 after reset) ===
+  PASS: ch0 wins the first tie
+  PASS: S3: never both grants at once
+  PASS: S3: no grant without a request
+  PASS: S3: no preemption (grant held until done)
+  PASS: S3: no interrupt event lost
+
+=== S4: equal priority, both saturating -> grants alternate ===
+  grants ch0=2728 ch1=2727
+  PASS: grant counts differ by at most 1
+  PASS: arbiter kept running (>100 grants)
+  PASS: S4: never both grants at once
+  PASS: S4: no grant without a request
+  PASS: S4: no preemption (grant held until done)
+  PASS: S4: no interrupt event lost
+
+=== S5: ch0 saturating (prio 7), ch1 periodic (prio 1), AGING OFF ===
+  fixed priority
+    ch0: grants=  5455  latency min/avg/max = 1 / 1.0 / 1
+    ch1: grants=     0  latency min/avg/max = 0 / 0.0 / 59899
+    Jain index (grant counts) = 0.500
+    ch1 is STILL WAITING after 60000 cycles (current wait = 59899)
+  PASS: ch1 starved: never granted while ch0 saturates
+  PASS: ch1 wait grows with the whole run (unbounded)
+  PASS: S5: never both grants at once
+  PASS: S5: no grant without a request
+  PASS: S5: no preemption (grant held until done)
+  PASS: S5: no interrupt event lost
+
+=== S6: identical load, AGING ON (threshold 64 cycles/step) ===
+  priority + aging
+    ch0: grants=  5338  latency min/avg/max = 1 / 1.2 / 44
+    ch1: grants=    30  latency min/avg/max = 385 / 389.6 / 395
+    Jain index (grant counts) = 0.506
+    analytic bound for ch1 wait = (7-1)*64 + 2*(8+3) + 8 = 414 cycles
+  PASS: ch1 is now served repeatedly (no starvation)
+  PASS: ch1 worst-case wait is within the analytic bound
+  PASS: ch1 never wins before its aging bonus has closed the priority gap
+  PASS: high-priority ch0 still gets the vast majority of grants
+  PASS: ch0 worst-case latency is just one ch1 service
+  PASS: aging cuts ch1 worst-case wait versus S5
+  PASS: S6: never both grants at once
+  PASS: S6: no grant without a request
+  PASS: S6: no preemption (grant held until done)
+  PASS: S6: no interrupt event lost
+
+=== S7 vs S8: random overload, same event streams, aging OFF vs ON ===
+  S7 aging OFF
+    ch0: grants=  4595  latency min/avg/max = 1 / 1.1 / 33
+    ch1: grants=     8  latency min/avg/max = 118 / 7380.0 / 21066
+    Jain index (grant counts) = 0.502
+  S8 aging ON 
+    ch0: grants=  4255  latency min/avg/max = 1 / 2.1 / 34
+    ch1: grants=   142  latency min/avg/max = 66 / 385.3 / 397
+    Jain index (grant counts) = 0.533
+    events  S7: ch0 irq=27527 coalesced=22931 | ch1 irq=5502 coalesced=5493
+    events  S8: ch0 irq=27527 coalesced=23271 | ch1 irq=5502 coalesced=5359
+  PASS: aging reduces ch1 worst-case wait
+  PASS: aging does not reduce ch1 service count
+  PASS: cost of aging: ch0 worst-case latency does not improve
+  PASS: aging does not worsen Jain fairness index
+  PASS: S7: never both grants at once
+  PASS: S7: no grant without a request
+  PASS: S7: no preemption (grant held until done)
+  PASS: S7: no interrupt event lost
+  PASS: S8: never both grants at once
+  PASS: S8: no grant without a request
+  PASS: S8: no preemption (grant held until done)
+  PASS: S8: no interrupt event lost
+
+==============================================
+ALL 50 CHECKS PASSED
+==============================================
+sim/arbiter/tb_arbiter.v:159: $finish called at 600050000 (1ps)
